@@ -32,25 +32,25 @@ const postPaymentMode = async (req, res) => {
     await client `BEGIN`;
 
     try {
+        const { paymentmodename, isactive } = req.body;
 
         const paymentmode = new Paymentmode(
-            NULL,
-            req.body.paymentmodename,
-            req.body.isactive || true
+            null,
+            paymentmodename,
+            isactive || true
         );
 
-        Paymentmode.validate(paymentmode);
+        Paymentmode.validateCreate(paymentmode);
 
         const result = await client`
             SELECT * FROM post_paymentmode(${paymentmode.paymentmodename}, 
             ${paymentmode.isactive}
-            ) as id;
+            );
         `;
-
+        await client `COMMIT`;
         res.status(201).json({ 
-            id: result[0].id, 
-            paymentmodename: paymentmode.paymentmodename, 
-            status: paymentmode.isactive
+            message: 'Payment mode created successfully',
+            data: result[0]
         });
 
     } catch (error) {
@@ -77,7 +77,7 @@ const putPaymentMode = async (req, res) => {
             req.body.isactive          
         );
         
-        Paymentmode.validate(paymentmode);
+        Paymentmode.validateUpdate(paymentmode);
         const result = await client`
             SELECT * FROM put_paymentmode(
                 ${paymentmode.paymentmodeid},
